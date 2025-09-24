@@ -155,7 +155,8 @@ class BusMasterLogParser:
 
                 match = re.match(self.log_pattern, line)
                 if match:
-                    timestamp = match.group(1)
+                    tstr = match.group(1)
+                    timestamp = re.sub(r':(?=[^:]*$)', '.', tstr)
                     direction = match.group(2)
                     channel = int(match.group(3))
                     can_id = int(match.group(4), 16)  # Converte da hex
@@ -268,6 +269,9 @@ def convert_log_to_csv(log_file: str, dbc_files: List[str], output_file: str):
             # Inizializza la riga con timestamp e valori vuoti
             if rrow == 0:
                 row = [can_message.timestamp] + [None] * len(all_signals)
+            else:
+                row[0] = can_message.timestamp
+
 
             # Se il messaggio CAN ha una definizione DBC corrispondente
             if can_message.can_id in dbc_parser.messages:
@@ -278,9 +282,10 @@ def convert_log_to_csv(log_file: str, dbc_files: List[str], output_file: str):
                     if signal_name in all_signals:
                         signal_index = all_signals.index(signal_name) + 1  # +1 per il timestamp
                         value = decoder.extract_signal_value(can_message.data, signal)
+                        rrow += 1
                         if value is not None:
                             row[signal_index] = value
-                            rrow += 1
+
 
 
             writer.writerow(row)
