@@ -3,6 +3,8 @@ from tkinter import filedialog, messagebox, ttk
 import subprocess
 import os
 import sys
+import tempfile
+import shutil
 
 class CANBusLogs2CSVGUI(tk.Tk):
     def __init__(self):
@@ -27,7 +29,7 @@ class CANBusLogs2CSVGUI(tk.Tk):
         pady = 6
 
         # Log file selection
-        log_frame = ttk.LabelFrame(self, text="Log file")
+        log_frame = ttk.LabelFrame(self, text="Log file (CAN log or MDF4 *.mf4)")
         log_frame.pack(fill="x", padx=padx, pady=pady)
         log_entry = ttk.Entry(log_frame, textvariable=self.log_file, width=60)
         log_entry.pack(side="left", padx=5, pady=5)
@@ -85,12 +87,15 @@ class CANBusLogs2CSVGUI(tk.Tk):
         self.output_text.pack(fill="both", expand=True, padx=5, pady=5)
 
     def browse_log(self):
-        fname = filedialog.askopenfilename(title="Select CAN log file")
+        fname = filedialog.askopenfilename(
+            title="Select CAN log or MDF4 file",
+            filetypes=[("CAN log / MDF4 / TRC files", "*.log *.txt *.asc *.trc *.mf4"), ("All files", "*.*")]
+        )
         if fname:
             self.log_file.set(fname)
 
     def add_dbc(self):
-        files = filedialog.askopenfilenames(title="Select DBC file(s)")
+        files = filedialog.askopenfilenames(title="Select DBC file(s)", filetypes=[("DBC files", "*.dbc"), ("All files", "*.*")])
         for f in files:
             if f not in self.dbc_files:
                 self.dbc_files.append(f)
@@ -110,34 +115,81 @@ class CANBusLogs2CSVGUI(tk.Tk):
 
     def run_conversion(self):
         # Validate
-        if not self.log_file.get() or not os.path.exists(self.log_file.get()):
-            messagebox.showerror("Missing log file", "Please select a valid CAN log file.")
+        log_path = self.log_file.get()
+        if not log_path or not os.path.exists(log_path):
+            messagebox.showerror("Missing log file", "Please select a valid CAN log file or MDF4 file.")
             return
         if not self.dbc_files or any(not os.path.exists(f) for f in self.dbc_files):
             messagebox.showerror("Missing DBC file", "Please add valid DBC file(s).")
             return
 
-        args = [
-            sys.executable if getattr(sys, "frozen", False) == False else sys.executable, # Use Python executable
-            os.path.abspath("CANBusLogs_2_CSV.py"),
-            self.log_file.get(),
-            *self.dbc_files,
-            "-o", self.output_file.get(),
-            "-d", self.delimiter.get(),
-            "-n", self.name_mode.get()
-        ]
-        if self.message_counter.get():
-            args.append("--message_counter")
-        if self.message_pulser.get():
-            args.append("--message_pulser")
+        # Determine if MDF4 and needs conversion
+        is_mdf4 = log_path.lower().endswith(".mf4")
+        temp_trc = None
 
         self.output_text.configure(state="normal")
         self.output_text.delete(1.0, tk.END)
-        self.output_text.insert(tk.END, "Running conversion...\n\n")
+        self.output_text.insert(tk.END, "Preparing conversion...\n\n")
         self.output_text.configure(state="disabled")
         self.update_idletasks()
 
+        input_for_converter = log_path
         try:
+            if is_mdf4:
+                self.output_text.configure(state="normal")
+                self.output_text.insert(tk.END, f"Detected MDF4 file: {os.path.basename(log_path)}\n")
+                self.output_text.insert(tk.END, "Converting MDF4 to .trc using mdf2peak.exe...\n")
+                self.output_text.configure(state="disabled")
+                self.update_idletasks()
+
+                # Find mdf2peak.exe
+                mdf2peak_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "_aux", "mdf2peak.exe")
+                if not os.path.exists(mdf2peak_path):
+                    messagebox.showerror("mdf2peak.exe not found", f"File not found: {mdf2peak_path}")
+                    return
+
+                # Prepare temp .trc file
+                temp_dir = os.path.dirname(log_path)
+                temp_trc = os.path.join(temp_dir, os.path.basename(os.path.splitext(log_path)[0] + "_CAN.trc")).replace("\\", "/")
+
+                mdf2peak_args = [mdf2peak_path, log_path, "-f", "version2"]
+                proc = subprocess.Popen(mdf2peak_args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+                for line in proc.stdout:
+                    self.output_text.configure(state="normal")
+                    self.output_text.insert(tk.END, "[mdf2peak] " + line)
+                    self.output_text.see(tk.END)
+                    self.output_text.configure(state="disabled")
+                    self.update_idletasks()
+                proc.wait()
+                if proc.returncode != 0 or not os.path.exists(temp_trc):
+                    messagebox.showerror("mdf2peak.exe error", "Failed to convert MDF4 to TRC. Check output for details.")
+                    return
+                input_for_converter = temp_trc
+                self.output_text.configure(state="normal")
+                self.output_text.insert(tk.END, f"TRC file generated: {temp_trc}\n\n")
+                self.output_text.configure(state="disabled")
+                self.update_idletasks()
+
+            # Arguments for converter
+            args = [
+                sys.executable if getattr(sys, "frozen", False) == False else sys.executable,
+                os.path.abspath("CANBusLogs_2_CSV.py"),
+                input_for_converter,
+                *self.dbc_files,
+                "-o", self.output_file.get(),
+                "-d", self.delimiter.get(),
+                "-n", self.name_mode.get()
+            ]
+            if self.message_counter.get():
+                args.append("--message_counter")
+            if self.message_pulser.get():
+                args.append("--message_pulser")
+
+            self.output_text.configure(state="normal")
+            self.output_text.insert(tk.END, "Running CANBusLogs_2_CSV.py converter...\n\n")
+            self.output_text.configure(state="disabled")
+            self.update_idletasks()
+
             # Run CANBusLogs_2_CSV.py as subprocess and capture output
             proc = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
             for line in proc.stdout:
@@ -153,6 +205,13 @@ class CANBusLogs2CSVGUI(tk.Tk):
                 messagebox.showerror("Error", "Conversion failed. Check output for details.")
         except Exception as e:
             messagebox.showerror("Error running script", str(e))
+        finally:
+            # Clean up temp TRC if created
+            if temp_trc and os.path.exists(temp_trc):
+                try:
+                    os.remove(temp_trc)
+                except Exception:
+                    pass
 
 if __name__ == "__main__":
     app = CANBusLogs2CSVGUI()
