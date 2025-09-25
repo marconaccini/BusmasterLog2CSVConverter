@@ -1,0 +1,3 @@
+Per i file generati in formato mdf4 usare
+
+	mdf2peak.exe file.MF4 -f version2
