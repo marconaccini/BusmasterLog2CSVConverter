@@ -16,9 +16,7 @@ Version: 2.0.0
 
 ## Usage 
 
-Usage: 
-		
-		CANBusLogs_2_CSV.py [-h] [-o OUTPUT] [-d DELIMITER] [-n NAME_MODE] [-mc] [-mp]
+Usage: CANBusLogs_2_CSV.py [-h] [-o OUTPUT] [-d DELIMITER] [-n NAME_MODE] [-mc] [-mp]
                            log_file dbc_files [dbc_files ...]
 
 Converts file logs and traces into CSV using file DBC
