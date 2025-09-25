@@ -1,34 +1,25 @@
-# BusmasterLog2CSVConverter
-Converts CAN BUS logs from Busmaster to CSV data file
+# CANBus Logs to CSV Converter 
 
-## Introduction
+Multi-Format CAN Log to CSV Converter
 
-Started from [Log-CANverter](https://github.com/mitchdetailed/Log-CANverter).
+Converts CAN bus log files from various tools (BusMaster, PCAN-View, CL2000)
+to CSV format using DBC files for signal decoding.
 
-Converts Busmaster .log file (BUSMASTER Ver 3.2.2) to .csv format using DBC symbol decoding files.
+Supported formats:
+- BusMaster Ver 3.2.2: "09:25:06:1260 Rx 1 0x136 x 8 13 24 C2 A1 00 00 90 FF"
+- PCAN-View v4.2.1.533: "36    92.943 DT     00E3 Rx 8  FF 64 04 28 C6 58 49 08"
+- CL2000: "Timestamp;Type;ID;Data"
 
-The converter looks in to log file and collect all and only signals decriptable by DBC file and create CSV table.
+Author: Naccini Marco
+Version: 2.0.0
 
 
 ## Usage 
 
 With Python 3 use: 
 
-	python busmaster_converter.py logfile.log database.dbc -o output.csv
+	python busmaster_converter.py logfile.log database.dbc
 
-or 
-	
-	py busmaster_converter.py logfile.log database.dbc -o output.csv
 
-## Installation  
-
-Clone the reposiotiry   
-
-	git clone https://github.com/tuousername/busmaster-converter.git
-	cd busmaster-converter
-
-## How to run it
-
-	python busmaster_converter.py <file_log> <file_dbc> [file_dbc2 ...] -o <output.csv>
 
 
