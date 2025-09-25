@@ -41,4 +41,9 @@ Usage:
 
 ## Example  
 
-	python busmaster_converter.py logfile.log database.dbc
+	python CANBusLogs_2_CSV.py logfile.log database.dbc
+
+or 
+
+	python CANBusLogs_2_CSV.py ".\your_dir\Trace CAN1.trc" ".\your_dir\MCU.dbc" ".\your_dir\CAN1.dbc"  -o out_trc.csv -n message.signal -mp -mc
+	
