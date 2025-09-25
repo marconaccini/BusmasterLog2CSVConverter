@@ -18,7 +18,7 @@ Version: 2.0.0
 
 If you want to use GUI (tkinter)
 
-![GUI](.\CANBusLogs_2_CSV_GUI.png)
+![GUI](CANBusLogs_2_CSV_GUI.png)
 
 At command line
 
