@@ -16,6 +16,16 @@ Version: 2.0.0
 
 ## Usage 
 
+If you want to use GUI (tkinter)
+
+![GUI](.\CANBusLogs_2_CSV_GUI.png)
+
+At command line
+
+	python .\CANBusLogs_2_CSV_GUI.py
+
+Or at command line
+
 Usage: 
 
 	CANBusLogs_2_CSV.py [-h] [-o OUTPUT] [-d DELIMITER] [-n NAME_MODE] [-mc] [-mp] log_file dbc_files [dbc_files ...]
