@@ -20,24 +20,24 @@ Usage:
 
 	CANBusLogs_2_CSV.py [-h] [-o OUTPUT] [-d DELIMITER] [-n NAME_MODE] [-mc] [-mp] log_file dbc_files [dbc_files ...]
 
-Converts file logs and traces into CSV using file DBC
+	Converts file logs and traces into CSV using file DBC
 
-positional arguments:
-	log_file              Input CAN log file
-	dbc_files             One or more DBC files
+	positional arguments:
+		log_file              Input CAN log file
+		dbc_files             One or more DBC files
 
-options:
-	-h, --help            show this help message and exit
-	-o OUTPUT, --output OUTPUT
-						Output CSV file (default: output.csv)
-	-d DELIMITER, --delimiter DELIMITER
-						CSV delimiter (default: ;)
-	-n NAME_MODE, --name_mode NAME_MODE
-						Signal name mode: signal = signal name only, message.signal = message + signal name mode
-	-mc, --message_counter
-						Increment counter signal when message appears
-	-mp, --message_pulser
-						Generate pulse signal when message appears
+	options:
+		-h, --help            show this help message and exit
+		-o OUTPUT, --output OUTPUT
+							Output CSV file (default: output.csv)
+		-d DELIMITER, --delimiter DELIMITER
+							CSV delimiter (default: ;)
+		-n NAME_MODE, --name_mode NAME_MODE
+							Signal name mode: signal = signal name only, message.signal = message + signal name mode
+		-mc, --message_counter
+							Increment counter signal when message appears
+		-mp, --message_pulser
+							Generate pulse signal when message appears
 
 ## Example  
 
