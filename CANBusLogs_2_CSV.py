@@ -25,6 +25,8 @@ from pathlib import Path
 
 from enum import Enum
 
+TIME_STAMP_OUTPUT = "%d.%m.%Y %H:%M:%S.%f"
+
 
 class log_formats(Enum):
     """Supported log file formats"""
@@ -283,10 +285,11 @@ class MultiFormatLogParser:
                         tstr = match.group(1)
                         t1 = self.start_date
                         h, m, s, ms = tstr.split(":")
-                        h, m, s, ms = int(h), int(m), int(s), int(ms)
-                        delta = timedelta(hours=h, minutes=m, seconds=s, milliseconds=ms)
+                        s = s + '.' + ms
+                        h, m, s = int(h), int(m), float(s)
+                        delta = timedelta(hours=h, minutes=m, seconds=s) #, milliseconds=ms)
                         t2 = t1 + delta
-                        timestamp = t2.strftime("%Y.%m.%d %H:%M:%S.%f")[:-3]
+                        timestamp = t2.strftime(TIME_STAMP_OUTPUT)[:-2]
                         direction = match.group(2)
                         channel = int(match.group(3))
                         can_id = int(match.group(4), 16)  # Convert from hex
@@ -299,7 +302,7 @@ class MultiFormatLogParser:
                         ms = float(tstr)
                         delta = timedelta(hours=0, minutes=0, seconds=0, milliseconds=ms)
                         t2 = t1 + delta
-                        timestamp = t2.strftime("%Y.%m.%d %H:%M:%S.%f")[:-3]
+                        timestamp = t2.strftime(TIME_STAMP_OUTPUT)[:-2]
                         direction = match.group(4)
                         ID = match.group(3)
                         can_id = int(ID, 16)  # Convert from hex
@@ -310,7 +313,7 @@ class MultiFormatLogParser:
                     elif self.log_format == log_formats.CL2000.value:
                         tstr = match.group(1)
 
-                        tstr = datetime.strptime(tstr, "%Y.%m.%d_%H:%M:%S.%f")
+                        tstr = datetime.strptime(tstr, TIME_STAMP_OUTPUT)[:-2]
                         timestamp = tstr
                         direction = 'Rx'
 
@@ -395,6 +398,7 @@ def get_pulser_name(DBC_message_name):
 def get_counter_name(DBC_message_name):
     return '_' + DBC_message_name + '_Counter'
 
+
 def convert_log_to_csv(log_file: str, dbc_files: List[str], output_file: str):
     """Convert CAN log file to CSV using DBC files"""
 
@@ -438,12 +442,13 @@ def convert_log_to_csv(log_file: str, dbc_files: List[str], output_file: str):
 
     # Prepare CSV header
     csv_header = ['time'] + all_signals
+    #csv_header.append("")
 
     # Process messages and write CSV
     decoder = SignalDecoder()
 
     with open(output_file, 'w', newline='') as csvfile:
-        writer = csv.writer(csvfile, delimiter=SETUP.delimiter)
+        writer = csv.writer(csvfile, delimiter=SETUP.delimiter, lineterminator = ';\r\n')
         writer.writerow(csv_header)
         rrow = 0
 
@@ -501,6 +506,7 @@ def convert_log_to_csv(log_file: str, dbc_files: List[str], output_file: str):
                         if value is not None:
                             row[signal_index] = value
 
+            #row.append("")
             writer.writerow(row)
 
     print(f"CSV file created: {output_file}")
